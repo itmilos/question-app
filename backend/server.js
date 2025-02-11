@@ -9,9 +9,10 @@ const PORT = process.env.PORT || 3001;
 const viewedQuestions = new Map();
 
 // Update CORS configuration for production
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000'
-}));
+// app.use(cors({
+//   origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+// }));
+app.use(cors());
 app.use(express.json());
 
 // Get client IP and viewed questions
