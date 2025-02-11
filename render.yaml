@@ -1,0 +1,22 @@
+services:
+  # Backend API
+  - type: web
+    name: questions-api
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: node backend/server.js
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        value: https://questions-app.onrender.com
+
+  # Frontend
+  - type: web
+    name: questions-app
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://questions-api.onrender.com 
