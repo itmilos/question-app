@@ -15,7 +15,6 @@ services:
   # Frontend
   - type: web
     name: questions-app
-    plan: free
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./build
