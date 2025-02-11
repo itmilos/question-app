@@ -22,5 +22,5 @@ services:
       - key: REACT_APP_API_URL
         fromService:
           type: web
-          name: questions-api
+          name: questions-api-qng6
           property: url 
