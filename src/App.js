@@ -21,7 +21,7 @@ function App() {
         const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
         
         // Get user's viewed questions from server
-        const response = await fetch("http://localhost:3001/api/user-info");
+        const response = await fetch("https://questions-api-qng6.onrender.com/api/user-info");
         const data = await response.json();
         setUsedQuestions(new Set(data));
         
@@ -99,7 +99,7 @@ function App() {
     
     try {
       // Record viewed question on server
-      await fetch("http://localhost:3001/api/record-view", {
+      await fetch("https://questions-api-qng6.onrender.com/api/record-view", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
