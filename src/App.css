@@ -36,3 +36,21 @@
     transform: rotate(360deg);
   }
 }
+
+.category-buttons {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.category-buttons button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.category-buttons button.active {
+  background-color: #007bff;
+  color: white;
+}
