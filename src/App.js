@@ -61,7 +61,7 @@ function App() {
     
     try {
       // Record viewed question on server
-      await fetch(`${API_URL}/api/record-view`, {
+      await fetch("https://questions-api-qng6.onrender.com/api/record-view", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
