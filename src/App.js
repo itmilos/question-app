@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import questionsData from './questions.js';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function App() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -17,7 +19,7 @@ function App() {
         const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
         
         // Get user's viewed questions from server
-        const response = await fetch('http://localhost:3001/api/user-info');
+        const response = await fetch(`${API_URL}/api/user-info`);
         const data = await response.json();
         setUsedQuestions(new Set(data.viewedQuestions));
         
@@ -59,7 +61,7 @@ function App() {
     
     try {
       // Record viewed question on server
-      await fetch('http://localhost:3001/api/record-view', {
+      await fetch(`${API_URL}/api/record-view`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
