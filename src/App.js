@@ -1,10 +1,24 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import questionsData from './questions.js';
 import axios from 'axios';
+import Home from './Home';
+import SubCategory from './SubCategory';
+import Question from './Question';
+import StaffKudos from './StaffKudos'; // Import the new component
 
 const API_URL = "https://questions-api-qng6.onrender.com/api";
 // const API_URL = "http://localhost:3001/api";
+
 function App() {
+  return (
+    <Router>
+      <Main />
+    </Router>
+  );
+}
+
+function Main() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [usedQuestions, setUsedQuestions] = useState(new Set());
@@ -13,6 +27,8 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+
+  const navigate = useNavigate();
 
   // Move axios instance and interceptors inside component
   const api = axios.create({
@@ -59,13 +75,6 @@ function App() {
     initializeQuestions();
   }, []);
 
-  // Add new useEffect to set initial question when questions are loaded
-  useEffect(() => {
-    if (questions.length > 0 && currentQuestion === null) {
-      getRandomQuestion();
-    }
-  }, [questions]);
-
   // Add useEffect for system dark mode preference
   useEffect(() => {
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -73,25 +82,28 @@ function App() {
     }
   }, []);
 
-  // Update category selection handler to reset subcategory
+  // Update category selection handler to reset subcategory and navigate
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setSelectedSubCategory(null);
     setCurrentQuestion(null);
     setUsedQuestions(new Set());
-    
-    // Immediately get a question if family category is selected
+
     if (category === 'family') {
-      getRandomQuestion(category, null);
+      getRandomQuestion(category, null)
+        .then(() => navigate('/question'));
+    } else {
+      navigate('/subcategory');
     }
   };
 
-  // Add subcategory selection handler
+  // Add subcategory selection handler with navigation
   const handleSubCategorySelect = (subCategory) => {
     setSelectedSubCategory(subCategory);
     setCurrentQuestion(null);
     setUsedQuestions(new Set());
-    getRandomQuestion(selectedCategory, subCategory);
+    getRandomQuestion(selectedCategory, subCategory)
+      .then(() => navigate('/question'));
   };
 
   // Update getRandomQuestion to handle subcategories
@@ -136,15 +148,15 @@ function App() {
 
   const handleBack = () => {
     setSelectedCategory(null);
+    setSelectedSubCategory(null);
     setCurrentQuestion(null);
     setUsedQuestions(new Set());
+    navigate('/');
   };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'} transition-colors duration-200`}>
       <div className="container mx-auto px-4 py-8 max-w-2xl relative">
-
-
         {selectedCategory && (
           <button
             onClick={handleBack}
@@ -191,107 +203,44 @@ function App() {
               <div className={`w-32 h-10 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg animate-pulse`} />
             </div>
           </div>
-        ) : !selectedCategory ? (
-          <>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-              {['friends', 'couples', 'family'].map(category => (
-                <button 
-                  key={category}
-                  onClick={() => handleCategorySelect(category)}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full sm:w-auto ${
-                    isDarkMode 
-                      ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                      : 'bg-white hover:bg-gray-50 text-gray-900'
-                  } shadow-lg`}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
-              ))}
-            </div>
-            <div className={`text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Please select a category
-            </div>
-          </>
-        ) : selectedCategory === 'family' ? (
-          <>
-            {message && <div className="text-center text-red-500 mb-4">{message}</div>}
-            {currentQuestion && (
-              <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-4 sm:p-8 transition-colors`}>
-                <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                  Category: {currentQuestion.category}
-                </h2>
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-base sm:text-lg`}>
-                  {currentQuestion.text}
-                </p>
-              </div>
-            )}
-            
-            {currentQuestion && (
-              <button 
-                onClick={() => getRandomQuestion()} 
-                className={`mt-6 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full shadow-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                    : 'bg-white hover:bg-gray-50 text-gray-900'
-                }`}
-              >
-                Next Question
-              </button>
-            )}
-          </>
-        ) : selectedCategory && (selectedCategory === 'friends' || selectedCategory === 'couples') && !selectedSubCategory ? (
-          <>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-              {['genx', 'geny', 'genz'].map(subCategory => (
-                <button 
-                  key={subCategory}
-                  onClick={() => handleSubCategorySelect(subCategory)}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full sm:w-auto ${
-                    isDarkMode 
-                      ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                      : 'bg-white hover:bg-gray-50 text-gray-900'
-                  } shadow-lg`}
-                >
-                  {subCategory === 'genx' ? 'Gen X' : 
-                   subCategory === 'geny' ? 'Gen Y' : 
-                   'Gen Z'}
-                </button>
-              ))}
-            </div>
-            <div className={`text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Please select a generation
-            </div>
-          </>
         ) : (
-          <>
-            {message && <div className="text-center text-red-500 mb-4">{message}</div>}
-            {currentQuestion && (
-              <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-4 sm:p-8 transition-colors`}>
-                <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                  Category: {currentQuestion.category}
-                  {currentQuestion.subCategory && ` - ${currentQuestion.subCategory === 'genx' ? 'Gen X' : 
-                                                     currentQuestion.subCategory === 'geny' ? 'Gen Y' : 
-                                                     'Gen Z'}`}
-                </h2>
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-base sm:text-lg`}>
-                  {currentQuestion.text}
-                </p>
-              </div>
-            )}
-            
-            {currentQuestion && (
-              <button 
-                onClick={() => getRandomQuestion()} 
-                className={`mt-6 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full shadow-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                    : 'bg-white hover:bg-gray-50 text-gray-900'
-                }`}
-              >
-                Next Question
-              </button>
-            )}
-          </>
+          <Routes>
+            <Route path="/" element={
+              <Home handleCategorySelect={handleCategorySelect} isDarkMode={isDarkMode} />
+            } />
+
+            <Route path="/subcategory" element={
+              (selectedCategory === 'friends' || selectedCategory === 'couples') ? (
+                <SubCategory 
+                  selectedCategory={selectedCategory} 
+                  handleSubCategorySelect={handleSubCategorySelect} 
+                  isDarkMode={isDarkMode} 
+                />
+              ) : (
+                <Question 
+                  currentQuestion={currentQuestion} 
+                  isDarkMode={isDarkMode} 
+                  getNextQuestion={() => getRandomQuestion()} 
+                />
+              )
+            } />
+
+            <Route path="/question" element={
+              <>
+                {message && <div className="text-center text-red-500 mb-4">{message}</div>}
+                <Question 
+                  currentQuestion={currentQuestion} 
+                  isDarkMode={isDarkMode} 
+                  getNextQuestion={() => getRandomQuestion()} 
+                />
+              </>
+            } />
+
+            {/* New Staff Kudos Route */}
+            <Route path="/staff-kudos" element={
+              <StaffKudos isDarkMode={isDarkMode} />
+            } />
+          </Routes>
         )}
       </div>
     </div>
