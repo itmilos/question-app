@@ -1,7 +1,7 @@
 services:
   # Backend API
   - type: web
-    name: questions-api
+    name: questions-api-qng6
     plan: free
     env: node
     buildCommand: cd backend && npm install
@@ -10,7 +10,7 @@ services:
       - key: PORT
         value: 3001
       - key: FRONTEND_URL
-        value: https://questions-api-qng6.onrender.com/
+        value: https://questions-app-bx94.onrender.com
 
   # Frontend
   - type: web
