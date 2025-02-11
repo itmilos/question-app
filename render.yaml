@@ -20,4 +20,7 @@ services:
     staticPublishPath: ./build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://questions-api.onrender.com 
+        fromService:
+          type: web
+          name: questions-api
+          property: url 
