@@ -2,6 +2,7 @@ services:
   # Backend API
   - type: web
     name: questions-api
+    plan: free
     env: node
     buildCommand: cd backend && npm install
     startCommand: node backend/server.js
@@ -14,6 +15,7 @@ services:
   # Frontend
   - type: web
     name: questions-app
+    plan: free
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./build
