@@ -3,7 +3,7 @@ import questionsData from './questions.js';
 import axios from 'axios';
 
 const API_URL = "https://questions-api-qng6.onrender.com/api";
-
+// const API_URL = "http://localhost:3001/api";
 function App() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -12,6 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
   // Move axios instance and interceptors inside component
   const api = axios.create({
@@ -72,43 +73,48 @@ function App() {
     }
   }, []);
 
-  // Add category selection handler
+  // Update category selection handler to reset subcategory
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
+    setSelectedSubCategory(null);
     setCurrentQuestion(null);
     setUsedQuestions(new Set());
-    getRandomQuestion(category);
+    
+    // Immediately get a question if family category is selected
+    if (category === 'family') {
+      getRandomQuestion(category, null);
+    }
   };
 
-  const getRandomQuestion = async (categoryOverride = null) => {
+  // Add subcategory selection handler
+  const handleSubCategorySelect = (subCategory) => {
+    setSelectedSubCategory(subCategory);
+    setCurrentQuestion(null);
+    setUsedQuestions(new Set());
+    getRandomQuestion(selectedCategory, subCategory);
+  };
+
+  // Update getRandomQuestion to handle subcategories
+  const getRandomQuestion = async (categoryOverride = null, subCategoryOverride = null) => {
     const category = categoryOverride || selectedCategory;
+    const subCategory = subCategoryOverride || selectedSubCategory;
     
-    // Filter questions by category and unused status
-    const availableQuestions = questionsData.filter(q => 
-      !usedQuestions.has(String(q.id)) && 
-      (category ? q.category === category : true)
-    );
+    // Filter questions by category, subcategory, and unused status
+    const availableQuestions = questionsData.filter(q => {
+      const categoryMatch = category ? q.category === category : true;
+      // Only check subCategory if it's not the family category
+      const subCategoryMatch = category === 'family' ? true : (subCategory ? q.subCategory === subCategory : true);
+      return !usedQuestions.has(String(q.id)) && categoryMatch && subCategoryMatch;
+    });
 
     if (availableQuestions.length === 0) {
-      // Get remaining categories that have unused questions
-      const remainingCategories = ['friends', 'couples'].filter(cat => 
-        cat !== category && 
-        questionsData.some(q => q.category === cat && !usedQuestions.has(String(q.id)))
-      );
-
-      if (remainingCategories.length > 0) {
-        setMessage(`You've seen all ${category} questions! Try another category:`);
-        setCurrentQuestion(null);
-        return;
+      if (subCategory) {
+        setMessage(`You've seen all questions in this subcategory! Try another one:`);
       } else {
-        setMessage(`You've seen all questions! Starting over.`);
-        setUsedQuestions(new Set());
-        const newAvailableQuestions = questions.filter(q => q.category === category);
-        const randomIndex = Math.floor(Math.random() * newAvailableQuestions.length);
-        const selectedQuestion = newAvailableQuestions[randomIndex];
-        setCurrentQuestion(selectedQuestion);
-        return;
+        setMessage(`You've seen all questions in this category! Try another one:`);
       }
+      setCurrentQuestion(null);
+      return;
     }
 
     setMessage('');
@@ -206,10 +212,10 @@ function App() {
               Please select a category
             </div>
           </>
-        ) : (
+        ) : selectedCategory === 'family' ? (
           <>
             {message && <div className="text-center text-red-500 mb-4">{message}</div>}
-            {currentQuestion ? (
+            {currentQuestion && (
               <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-4 sm:p-8 transition-colors`}>
                 <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                   Category: {currentQuestion.category}
@@ -218,23 +224,58 @@ function App() {
                   {currentQuestion.text}
                 </p>
               </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-                {['friends', 'couples', 'family'].map(cat => 
-                  cat !== selectedCategory && (
-                    <button 
-                      key={cat}
-                      onClick={() => handleCategorySelect(cat)}
-                      className={`px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full sm:w-auto ${
-                        isDarkMode 
-                          ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                          : 'bg-white hover:bg-gray-50 text-gray-900'
-                      } shadow-lg`}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                  )
-                )}
+            )}
+            
+            {currentQuestion && (
+              <button 
+                onClick={() => getRandomQuestion()} 
+                className={`mt-6 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full shadow-lg ${
+                  isDarkMode 
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                    : 'bg-white hover:bg-gray-50 text-gray-900'
+                }`}
+              >
+                Next Question
+              </button>
+            )}
+          </>
+        ) : selectedCategory && (selectedCategory === 'friends' || selectedCategory === 'couples') && !selectedSubCategory ? (
+          <>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+              {['genx', 'geny', 'genz'].map(subCategory => (
+                <button 
+                  key={subCategory}
+                  onClick={() => handleSubCategorySelect(subCategory)}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 w-full sm:w-auto ${
+                    isDarkMode 
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                      : 'bg-white hover:bg-gray-50 text-gray-900'
+                  } shadow-lg`}
+                >
+                  {subCategory === 'genx' ? 'Gen X' : 
+                   subCategory === 'geny' ? 'Gen Y' : 
+                   'Gen Z'}
+                </button>
+              ))}
+            </div>
+            <div className={`text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Please select a generation
+            </div>
+          </>
+        ) : (
+          <>
+            {message && <div className="text-center text-red-500 mb-4">{message}</div>}
+            {currentQuestion && (
+              <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-4 sm:p-8 transition-colors`}>
+                <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                  Category: {currentQuestion.category}
+                  {currentQuestion.subCategory && ` - ${currentQuestion.subCategory === 'genx' ? 'Gen X' : 
+                                                     currentQuestion.subCategory === 'geny' ? 'Gen Y' : 
+                                                     'Gen Z'}`}
+                </h2>
+                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-base sm:text-lg`}>
+                  {currentQuestion.text}
+                </p>
               </div>
             )}
             
